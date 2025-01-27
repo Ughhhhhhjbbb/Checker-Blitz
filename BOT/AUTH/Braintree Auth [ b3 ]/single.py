@@ -59,16 +59,9 @@ Usage: /b3 cc|mes|ano|cvv</b>"""
         secondchk = await Client.edit_message_text(message.chat.id, firstchk.id, secondresp)
 
         start = time.perf_counter()
+        proxies = await get_proxy_format()  # Pass user_id here
 
-        # Get proxy in the correct format
-        proxies = await get_proxy_format()
-        proxy = {"http": proxies, "https": proxies} if proxies else None
-
-        # Create the session with the updated proxy configuration
-        transport = httpx.AsyncHTTPTransport(proxies=proxy)
-        session = httpx.AsyncClient(timeout=30, transport=transport, follow_redirects=True)
-
-        # Call the Braintree function
+        session = httpx.AsyncClient(timeout=30, follow_redirects=True)
         result = await create_braintree_auth(fullcc, session)
         getbin = await get_bin_details(cc)
         getresp = await get_charge_resp(result, user_id, fullcc)
@@ -93,7 +86,7 @@ Usage: /b3 cc|mes|ano|cvv</b>"""
         flag = getbin[5]
         currency = getbin[6]
 
-        # Final response
+        # Split the final response into shorter parts
         finalresp1 = f"""
 {status}
 
@@ -114,9 +107,9 @@ Usage: /b3 cc|mes|ano|cvv</b>"""
         await deductcredit(user_id)
         if status == "𝐀𝐩𝐩𝐫𝐨𝐯𝐞𝐝 ✅" or status == "𝐀𝐩𝐩𝐫𝐨𝐯𝐞𝐝 ✅":
             await sendcc(finalresp1, session)
-
         await session.aclose()
 
     except Exception as e:
         import traceback
         await error_log(traceback.format_exc())
+        
